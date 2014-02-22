@@ -55,7 +55,7 @@ toScreen (tx,ty) p = Translate tx ty p
 pic :: World -> Picture
 pic world = Pictures
     [ Color green $ Pictures $ [toScreen (world^.pod) (circleSolid radi)]
-    , Color white $ Translate (-400) (200) $ Scale 0.15 0.15 $ text ("Score: " ++ show (world^.mouse) ++ " " ++ (show (world^.pod)) ++ " " ++ (show (world^.event)))
+    , Color white $ Translate (-300) (200) $ Scale 0.08 0.08 $ text ("Score: " ++ show (world^.mouse) ++ " " ++ (show (world^.pod)) ++ " " ++ (show (world^.event)))
     ]
 
 handleEvent :: Event -> World -> World
