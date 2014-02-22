@@ -20,23 +20,22 @@ makeLenses ''World
 
 update :: Float -> World -> World
 update time = execState $ do
-    updateWorm time
+    updateWorld time
 
 step :: Direction -> GridPos -> GridPos
 step (dx, dy) (x, y) = (x+dx, y+dy)
 
-updateWorm :: Float -> State World ()
-updateWorm time = do
+updateWorld :: Float -> State World ()
+updateWorld time = do
     world <- get
     put $ move world
 
-move (World (0,0) _) = initialWorld
 move world@(World _ dir) = case dir of
     (0,0) -> world
     _ -> pod %~ (step dir) $ world
 
 radi :: Float
-radi = 10
+radi = 5
 
 initialWorld :: World
 initialWorld = World (1,0) (0,0)
@@ -76,12 +75,4 @@ main = play windowed black fps initialWorld pic handleEvent advanceTime
 
 
 {- TODO
- - Eat, grow
- - Score
- - Place food random
- - Obstacles
- - Shoot obstacles
- - Abilities, Events, Perks, Bonuses
- -- slowness, shrink tail, jump, long jump...
- -
  -}
