@@ -12,7 +12,8 @@ type Pos = (Float, Float)
 type Pod = Pos
 
 data World = World { _pod :: Pod
-                   , _vel :: Direction
+                   , _dir :: Direction
+                   , _speed :: Float
                    , _mouse :: Maybe Pos
                    , _event :: Maybe Event
                    }
@@ -23,8 +24,8 @@ update :: Float -> World -> World
 update time = execState $ do
     updateWorld time
 
-step :: Direction -> Pos -> Pos
-step (dx, dy) (x, y) = (x + dx, y + dy)
+step :: Direction -> Float -> Pos -> Pos
+step (dx, dy) speed (x, y) = (x + dx * speed, y + dy * speed)
 
 updateWorld :: Float -> State World ()
 updateWorld _ = do
@@ -32,15 +33,15 @@ updateWorld _ = do
     put $ move world
 
 move :: World -> World
-move world@(World _ dir _mpos _event) = case dir of
+move world = case world ^. dir of
     (0,0) -> world
-    _ -> pod %~ (step dir) $ world
+    _ -> pod %~ (step (world ^. dir) (world ^. speed) ) $ world
 
 radi :: Float
 radi = 5
 
 initialWorld :: World
-initialWorld = World (0,0) (0,0) Nothing Nothing
+initialWorld = World (0,0) (0,0) 1.0 Nothing Nothing
 
 windowed :: Display
 windowed = InWindow "Inter" (700, 500) (10, 10)
@@ -59,21 +60,18 @@ pic world = Pictures
 
 handleEvent :: Event -> World -> World
 handleEvent e world = case e of
-    (EventKey (SpecialKey KeyLeft) Down _ _) -> vel.~(-1,0) $ world
-    (EventKey (SpecialKey KeyRight) Down _ _) -> vel.~(1,0) $ world
-    (EventKey (SpecialKey KeyUp) Down _ _) -> vel.~(0,1) $ world
-    (EventKey (SpecialKey KeyDown) Down _ _) -> vel.~(0,-1) $ world
-    (EventKey (SpecialKey KeySpace) Down _ _) -> vel.~(0,0) $ world
+    (EventKey (SpecialKey KeyUp) Down _ _) -> speed %~ (+1) $ world
+    (EventKey (SpecialKey KeyDown) Down _ _) -> speed %~ (+(-1)) $ world
+    (EventKey (SpecialKey KeySpace) Down _ _) -> dir.~(0,0) $ world
     (EventMotion mouse_pos) -> mouse .~ (Just mouse_pos) $ world
-    (EventKey (MouseButton LeftButton) Down _ pos) -> let pod_pos = world ^.pod in vel .~ (direction pos pod_pos) $ world
+    (EventKey (MouseButton LeftButton) Down _ pos) -> let pod_pos = world ^.pod in dir .~ (direction pos pod_pos) $ world
     _ -> event .~ (Just e) $ world
 
 direction :: Pos -> Pos -> Direction
-direction to from = let (x,y) = diff to from
-                        len = sqrt $ x*x + y*y
+direction dest origin = let (x,y) = diff dest origin
+                            len = sqrt $ x*x + y*y
                     in
                     (x/len, y/len)
-
 
 diff :: Pos -> Pos -> Direction
 diff (x1, y1) (x2, y2) = (x1 - x2, y1 - y2)
