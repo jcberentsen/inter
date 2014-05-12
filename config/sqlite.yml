@@ -1,0 +1,20 @@
+Default: &defaults
+  database: Recast.sqlite3
+  poolsize: 10
+
+Development:
+  <<: *defaults
+
+Testing:
+  database: Recast_test.sqlite3
+  <<: *defaults
+
+Staging:
+  database: Recast_staging.sqlite3
+  poolsize: 100
+  <<: *defaults
+
+Production:
+  database: Recast_production.sqlite3
+  poolsize: 100
+  <<: *defaults

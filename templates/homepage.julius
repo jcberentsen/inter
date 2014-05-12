@@ -1,0 +1,2 @@
+var modelurl = "@{StaticR js_stue_stue_js}"
+var colladamodelurl = "@{StaticR model_collada_sibox_dae}"
