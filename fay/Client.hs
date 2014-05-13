@@ -49,23 +49,49 @@ onCanvasClick svg e = do
     rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
     startAnimation $ hobble (x,y) 10.0 1.0 rec
 
-spawnIntraGalacticCivilizations :: JQuery -> Event -> Fay ()
+spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do
-    createGalacticSector 500 (200,100) svg
+    --createSVGCircle "galaxy" (fromShow r) >>= moveTo (x+r, y+r) >>= appendTo svg
+    let sector = (500, (200,100))
+        galaxy = sector
+    createGalacticSector galaxy sector svg
 
-createGalacticSectors r (x,y) svg = do
-    createGalacticSector r (x,y) svg
-    createGalacticSector r (x+d,y) svg
-    createGalacticSector r (x+d,y+d) svg
-    createGalacticSector r (x,y+d) svg
+type Sector = (Double, Pos)
+type Svg = JQuery
+
+createGalacticSector :: Sector -> Sector -> Svg -> Fay ()
+createGalacticSector g sec@(r, (x,y)) svg = do
+    when (insideGalaxy sec g) $ do
+        svgsector <- createSVGRectangle "sector" (fromShow (r*2)) (fromShow (r*2)) >>= moveTo (x, y) >>= appendTo svg
+        return svgsector >>= click (\e -> do
+            remove svgsector
+            createGalacticSectors g ((r/2), (x,y)) svg)
+
+    return ()
+
+createGalacticSectors :: Sector -> Sector -> Svg -> Fay ()
+createGalacticSectors g (r, (x,y)) svg = do
+    createGalacticSector g (r, (x,y)) svg
+    createGalacticSector g (r, (x+d,y)) svg
+    createGalacticSector g (r, (x+d,y+d)) svg
+    createGalacticSector g (r, (x,y+d)) svg
   where d = 2*r
 
-createGalacticSector r (x,y) svg = do
-    sector <- createSVGRectangle "sector" (fromShow (r*2)) (fromShow (r*2)) >>= moveTo (x, y) >>= appendTo svg
-    return sector >>= click (const $ createGalacticSectors (r/2) (x,y) svg)
+insideGalaxy :: Sector -> Sector -> Bool
+insideGalaxy (sr, (sx, sy)) sec = inside scx scy sec
+                               || inside sx sy sec
+                               || inside (sx+sd) sy sec
+                               || inside (sx+sd) (sy+sd) sec
+                               || inside (sx) (sy+sd) sec
+    where scx = sx + sr
+          scy = sy + sr
+          sd = sr * 2
 
-    --createSVGCircle "galaxy" (fromShow r) >>= moveTo (x+r, y+r) >>= appendTo svg
-    return ()
+inside x y (r, (gx, gy)) = dist2 (x-cx) (y-cy) < (r*r)
+    where cx = gx+r
+          cy = gy+r
+
+dist2 dx dy = (dx * dx) + (dy * dy)
 
 renderServerFeedback :: JQuery -> T.Text -> Fay ()
 renderServerFeedback node t = setText t node >> return ()
