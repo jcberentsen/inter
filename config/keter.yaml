@@ -1,4 +1,4 @@
-exec: ../dist/build/Recast/Recast
+exec: ../dist/build/InterGameServer/InterGameServer
 args:
     - production
 host: <<HOST-NOT-SET>>

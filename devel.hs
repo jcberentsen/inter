@@ -1,5 +1,5 @@
 {-# LANGUAGE PackageImports #-}
-import "Recast" Application (getApplicationDev)
+import "Inter" Application (getApplicationDev)
 import Network.Wai.Handler.Warp
     (runSettings, defaultSettings, setPort)
 import Control.Concurrent (forkIO)

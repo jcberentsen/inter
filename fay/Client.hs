@@ -46,13 +46,16 @@ onCanvasClick svg e = do
     x <- eventClientX e
     y <- eventClientY e
     logF (x,y)
-    rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
-    startAnimation $ hobble (x,y) 10.0 1.0 rec
+    --rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
+    --startAnimation $ hobble (x,y) 10.0 1.0 rec
 
 spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do
-    --createSVGCircle "galaxy" (fromShow r) >>= moveTo (x+r, y+r) >>= appendTo svg
-    let sector = (500, (200,100))
+    let r = 500
+        x = 200
+        y = 100
+    --createSVGCircle "galaxy" (fromShow (r+50)) >>= moveTo (x+r, y+r) >>= appendTo svg
+    let sector = (r, (x,y))
         galaxy = sector
     createGalacticSector galaxy sector svg
 

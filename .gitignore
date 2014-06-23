@@ -17,3 +17,4 @@ static/faygen-*
 static/combined
 static/fay-runtime.js
 fay/Home.js
+deploy/
