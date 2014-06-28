@@ -81,8 +81,10 @@ makeFoundation conf = do
             updateLoop
     _ <- forkIO updateLoop
 
+    let game = Game ""
+
     let logger = Yesod.Core.Types.Logger loggerSet' getter
-        foundation = App conf s p manager dbconf logger
+        foundation = App conf s p manager dbconf logger game
     -- Perform database migration using our application's logging settings.
     runLoggingT
         (Database.Persist.runPool dbconf (runMigration migrateAll) p)

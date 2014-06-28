@@ -51,13 +51,15 @@ onCanvasClick svg e = do
 
 spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do
-    let r = 500
-        x = 200
-        y = 100
-    --createSVGCircle "galaxy" (fromShow (r+50)) >>= moveTo (x+r, y+r) >>= appendTo svg
-    let sector = (r, (x,y))
-        galaxy = sector
-    createGalacticSector galaxy sector svg
+    call (StartGame "Unsaved Inter game") $ \result -> do
+        let r = 500
+            x = 200
+            y = 100
+        --createSVGCircle "galaxy" (fromShow (r+50)) >>= moveTo (x+r, y+r) >>= appendTo svg
+        let sector = (r, (x,y))
+            galaxy = sector
+        createGalacticSector galaxy sector svg
+        logF result
 
 type Sector = (Double, Pos)
 type Svg = JQuery
