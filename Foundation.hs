@@ -22,14 +22,7 @@ import Yesod.Core.Types (Logger)
 import Yesod.Fay
 import SharedTypes
 import Fay.Convert (readFromFay)
-import Data.Monoid (mappend)
-
-import Data.Text
-data Game = Game { gameName :: Text }
-gameStart :: Text -> Game -> HandlerT App IO Text
-gameStart name game = do
-    liftIO $ (putStrLn . show . gameName) (game { gameName = name})
-    return $ "Started: " `mappend` name
+import Game
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -158,8 +151,11 @@ instance YesodFay App where
         master <- getYesod
         case readFromFay command of
             Just (StartGame name r) -> do
-                result <- gameStart name (appGame master)
-                render r result
+                game <- liftIO $ gameStart name (appGame master)
+                render r $ gameName game
+            Just (UserClicked pos r) -> do
+                (_game, event) <- liftIO $ gameUserClicked pos (appGame master)
+                render r $ event
             _ -> invalidArgs ["Invalid command"]
 
     fayRoute = FaySiteR

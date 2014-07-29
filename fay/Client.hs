@@ -41,13 +41,20 @@ do3dStuff mouseRef glcanvas = do
 fromRational :: a -> Double
 fromRational = undefined
 
+screenToWorldPos :: Pos -> Fay WorldPos
+screenToWorldPos pos = return pos
+
 onCanvasClick :: JQuery -> Event ->  Fay ()
 onCanvasClick svg e = do
     x <- eventClientX e
     y <- eventClientY e
-    logF (x,y)
-    --rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
-    --startAnimation $ hobble (x,y) 10.0 1.0 rec
+    pos <- screenToWorldPos (x, y)
+    logF pos
+    call (UserClicked pos) $ \(NewDestination world_pos@(wx,wy)) -> do
+        logF world_pos
+        rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
+        startAnimation $ hobble (wx,wy) 10.0 1.0 rec
+        return ()
 
 spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do
