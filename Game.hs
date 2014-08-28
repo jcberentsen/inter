@@ -11,7 +11,7 @@ data Game = Game
     } deriving (Show)
 
 initialGame :: Game
-initialGame = Game "" (0,0)
+initialGame = Game "" $ WorldPos 0 0
 
 gameStart :: Text -> Game -> IO Game
 gameStart name game = do

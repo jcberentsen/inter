@@ -20,13 +20,14 @@ main = ready $ do
     mouseRef <- newFayRef (0::Double, 0::Double)
     createSVGGroup >>= setAttr "id" "#svggroup" >>= appendTo svg
     select "#spawn" >>= click (spawnIntraGalacticCivilizations svg)
-    getDocument >>= select >>= click (onCanvasClick svg)
+    click (onClickNewDestination svg) svg
 
     select "#glcanvas" >>= do3dStuff mouseRef
 
     log <- select "#log"
     event_source <- newEventSource "/event"
     addEventListener "log" (handleLogEvent log) event_source
+    drawShip svg (WorldPos 0 0)
 
 do3dStuff :: FayRef (Double, Double) -> JQuery -> Fay ()
 do3dStuff mouseRef glcanvas = do
@@ -41,20 +42,49 @@ do3dStuff mouseRef glcanvas = do
 fromRational :: a -> Double
 fromRational = undefined
 
-screenToWorldPos :: Pos -> Fay WorldPos
-screenToWorldPos pos = return pos
+screenToWorldPos :: JQuery -> Pos -> Fay WorldPos
+screenToWorldPos svg pos = do
+    svg_w <- getWidth svg
+    svg_h <- getHeight svg
+    let sx = fst pos
+    let sy = snd pos
+    return $ WorldPos (sx - svg_w / 2) (sy - svg_h / 2)
 
-onCanvasClick :: JQuery -> Event ->  Fay ()
-onCanvasClick svg e = do
+worldToScreenPos :: JQuery -> WorldPos -> Fay Pos
+worldToScreenPos svg world_pos = do
+    svg_w <- getWidth svg
+    svg_h <- getHeight svg
+    let wx = world_x world_pos
+    let wy = world_y world_pos
+    let sx = (wx + svg_w / 2) * 1800 / svg_w
+    let sy = (wy + svg_h / 2) * 1200 / svg_h
+    return (sx, sy)
+
+onClickNewDestination :: JQuery -> Event ->  Fay ()
+onClickNewDestination svg e = do
+    logF $! e
     x <- eventClientX e
     y <- eventClientY e
-    pos <- screenToWorldPos (x, y)
-    logF pos
-    call (UserClicked pos) $ \(NewDestination world_pos@(wx,wy)) -> do
-        logF world_pos
-        rec <- createSVGRectangle "pick" "10" "10" >>= setAttr "class" "pick" >>= appendTo svg
-        startAnimation $ hobble (wx,wy) 10.0 1.0 rec
+    world_pos <- screenToWorldPos svg (x, y)
+    logF $! "pos= " `T.append` (fromShow world_pos)
+    call (UserClicked world_pos) $ \(NewDestination dest_world_pos) -> do
+        logF $! "world pos = " `T.append` (fromShow dest_world_pos)
+        moveShip svg dest_world_pos
+        --startAnimation $ hobble (wx, wy) 10.0 1.0 rec
         return ()
+
+drawShip :: JQuery -> WorldPos -> Fay ()
+drawShip svg world_pos = do
+    (sx, sy) <- worldToScreenPos svg world_pos
+    createSVGCircle "ship" "50" >>= moveTo (sx, sy) >>= appendTo svg
+    return ()
+
+moveShip :: JQuery -> WorldPos -> Fay ()
+moveShip svg world_pos = do
+    (sx, sy) <- worldToScreenPos svg world_pos
+    ship <- childrenMatching "#ship" svg >>= first >>= moveTo (sx, sy)
+    logF $! ship
+    return ()
 
 spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do

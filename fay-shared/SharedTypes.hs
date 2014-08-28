@@ -16,6 +16,6 @@ data Command =
   | UserClicked WorldPos (Returns ClientEvent)
     deriving (Read, Typeable, Data)
 
-type WorldPos = (Double, Double)
+data WorldPos = WorldPos { world_x ::Double, world_y :: Double } deriving (Data, Typeable, Show, Read)
 
 data ClientEvent = NewDestination WorldPos deriving (Data, Typeable, Show)
