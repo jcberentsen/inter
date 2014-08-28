@@ -7,11 +7,11 @@ import SharedTypes
 
 data Game = Game
     { gameName :: Text
-    , gameDestination :: WorldPos
+    , gameShip :: Ship
     } deriving (Show)
 
 initialGame :: Game
-initialGame = Game "" $ WorldPos 0 0
+initialGame = Game "" $ Ship (WorldPos 0 0) [WorldPos 0 0]
 
 gameStart :: Text -> Game -> IO Game
 gameStart name game = do
@@ -21,4 +21,7 @@ gameStart name game = do
 
 gameUserClicked :: WorldPos -> Game -> IO (Game, ClientEvent)
 gameUserClicked pos game = do
-    return (game { gameDestination = pos }, NewDestination pos)
+    let ship = gameShip game
+    let waypoints = pos : (shipWaypoints ship)
+    let ship' = ship { shipWaypoints=waypoints }
+    return (game { gameShip = ship'}, ShipUpdate ship')

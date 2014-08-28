@@ -18,4 +18,8 @@ data Command =
 
 data WorldPos = WorldPos { world_x ::Double, world_y :: Double } deriving (Data, Typeable, Show, Read)
 
-data ClientEvent = NewDestination WorldPos deriving (Data, Typeable, Show)
+data Ship = Ship { shipPos :: WorldPos
+                 , shipWaypoints :: [WorldPos]
+                 } deriving (Data, Typeable, Show, Read)
+
+data ClientEvent = ShipUpdate Ship deriving (Data, Typeable, Show)

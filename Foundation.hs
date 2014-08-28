@@ -23,6 +23,7 @@ import Yesod.Fay
 import SharedTypes
 import Fay.Convert (readFromFay)
 import Game
+import Data.IORef
 
 -- | The site argument for your application. This can be a good place to
 -- keep settings and values requiring initialization before your application
@@ -35,7 +36,7 @@ data App = App
     , httpManager :: Manager
     , persistConfig :: Settings.PersistConf
     , appLogger :: Logger
-    , appGame :: Game
+    , appGame :: IORef Game
     }
 
 -- Set up i18n messages. See the message folder.
@@ -151,10 +152,14 @@ instance YesodFay App where
         master <- getYesod
         case readFromFay command of
             Just (StartGame name r) -> do
-                game <- liftIO $ gameStart name (appGame master)
-                render r $ gameName game
+                game <- liftIO $ readIORef (appGame master)
+                game' <- liftIO $ gameStart name game
+                liftIO $ writeIORef (appGame master) game'
+                render r $ gameName game'
             Just (UserClicked pos r) -> do
-                (_game, event) <- liftIO $ gameUserClicked pos (appGame master)
+                game <- liftIO $ readIORef (appGame master)
+                (game', event) <- liftIO $ gameUserClicked pos game
+                liftIO $ writeIORef (appGame master) game'
                 render r $ event
             _ -> invalidArgs ["Invalid command"]
 

@@ -13,6 +13,9 @@ import Animation
 
 type Pos = (Double, Double)
 
+llogF :: f -> Fay ()
+llogF = ffi "console.log(%1)"
+
 createElementNS :: T.Text -> T.Text -> Fay Element
 createElementNS = ffi "document.createElementNS(%1,%2)"
 
@@ -42,6 +45,15 @@ createSVGRectangle ident w h = createSVGElement "rect" >>= setAttr "id" ident  >
 
 createSVGCircle :: T.Text -> T.Text -> Fay JQuery
 createSVGCircle ident radi = createSVGElement "circle" >>= setAttr "id" ident  >>= setAttr "r" radi
+
+createSVGPath :: T.Text -> [Pos] -> Fay JQuery
+createSVGPath ident points = do
+    let points_attr = T.concat (Prelude.map (\(x,y) -> (fromShow x) `T.append` "," `T.append` (fromShow y) `T.append` " ") points)
+    let style = "fill:none;stroke:white;stroke-width:3"
+    createSVGElement "polyline" >>= setAttr "id" ident  >>= setAttr "points" points_attr >>= setAttr "style" style
+
+-- <polyline points="20,20 40,25 60,40 80,120 120,140 200,180"
+--   style="fill:none;stroke:black;stroke-width:3" />
 
 createSVGGroup :: Fay JQuery
 createSVGGroup = createSVGElement "g"

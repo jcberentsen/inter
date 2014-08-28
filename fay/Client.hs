@@ -66,25 +66,40 @@ onClickNewDestination svg e = do
     x <- eventClientX e
     y <- eventClientY e
     world_pos <- screenToWorldPos svg (x, y)
-    logF $! "pos= " `T.append` (fromShow world_pos)
-    call (UserClicked world_pos) $ \(NewDestination dest_world_pos) -> do
-        logF $! "world pos = " `T.append` (fromShow dest_world_pos)
-        moveShip svg dest_world_pos
-        --startAnimation $ hobble (wx, wy) 10.0 1.0 rec
+    call (UserClicked world_pos) $ \(ShipUpdate ship) -> do
+        --logF $! "world pos = " `T.append` (fromShow dest_world_pos)
+        addWaypoints svg (shipPos ship) (shipWaypoints ship)
+        --ship <- moveShip svg dest_world_pos
         return ()
 
 drawShip :: JQuery -> WorldPos -> Fay ()
 drawShip svg world_pos = do
     (sx, sy) <- worldToScreenPos svg world_pos
-    createSVGCircle "ship" "50" >>= moveTo (sx, sy) >>= appendTo svg
+    createSVGRectangle "ship" "20" "20" >>= moveTo (sx, sy) >>= appendTo svg
     return ()
 
-moveShip :: JQuery -> WorldPos -> Fay ()
+moveShip :: JQuery -> WorldPos -> Fay JQuery
 moveShip svg world_pos = do
     (sx, sy) <- worldToScreenPos svg world_pos
-    ship <- childrenMatching "#ship" svg >>= first >>= moveTo (sx, sy)
-    logF $! ship
-    return ()
+    ship <- getShip svg
+    return ship
+
+getShip :: JQuery -> Fay JQuery
+getShip svg = childrenMatching "#ship" svg >>= first
+
+addWaypoints :: JQuery -> WorldPos -> [WorldPos] -> Fay JQuery
+addWaypoints svg pos waypoints = do
+    ship_pos <- worldToScreenPos svg pos
+    waypositions <- mapM (worldToScreenPos svg) waypoints
+    let waypos = Prelude.head waypositions
+    waypoint <- createSVGRectangle "waypoint" "5" "5" >>= moveTo waypos >>= appendTo svg
+    drawPath svg ship_pos waypositions
+
+drawPath :: JQuery -> Pos -> [Pos] -> Fay JQuery
+drawPath svg pos waypositions = do
+    oldpath <- childrenMatching "#path" svg >>= first
+    remove oldpath
+    createSVGPath "path" waypositions >>= appendTo svg
 
 spawnIntraGalacticCivilizations :: Svg -> Event -> Fay ()
 spawnIntraGalacticCivilizations svg _ = do
@@ -92,7 +107,6 @@ spawnIntraGalacticCivilizations svg _ = do
         let r = 500
             x = 200
             y = 100
-        --createSVGCircle "galaxy" (fromShow (r+50)) >>= moveTo (x+r, y+r) >>= appendTo svg
         let sector = (r, (x,y))
             galaxy = sector
         createGalacticSector galaxy sector svg
