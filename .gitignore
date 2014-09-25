@@ -18,3 +18,9 @@ static/combined
 static/fay-runtime.js
 fay/Home.js
 deploy/
+elm-examples/
+elm/build/
+elm/cache/
+elm/elm_dependencies/
+
+
