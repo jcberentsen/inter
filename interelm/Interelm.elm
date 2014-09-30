@@ -6,7 +6,7 @@ import Math.Vector2 (Vec2, vec2, add, scale)
 
 -- MODEL
 
-tau = 2*pi
+--tau = 2*pi
 
 type Rotor = Float
 rotor : Float -> Rotor
@@ -15,28 +15,26 @@ rotor r = r
 dir : Rotor -> Vec2
 dir r = vec2 (0-sin r) (cos r)
 
-type Ship =
+type Physical =
     { mass : Float
-    , acceleration : Vec2
-    , velocity : Vec2
-    , position : Vec2
-
-    , alpha : Rotor -- angular acceleration
+    , acc : Vec2
+    , vel : Vec2
+    , pos : Vec2
+    , alpha : Rotor
     , omega : Rotor
-    , orientation : Rotor
-    , x : Float
-    , y : Float
-    , vx : Float
-    , vy : Float
+    , orient : Rotor
+    }
+
+type Ship =
+    { body : Physical
     }
 
 data AccretionClass = PlanetClass | StellarClass | GalacticClass | ClusterClass
 
 type Accretion =
-    { position : Vec2
-    , mass : Float -- kg
+    { body : Physical
     , radius : Float -- meter
-    , class : AccretionClass
+    , classification : AccretionClass
     }
 
 data Direction = Left | Right
@@ -48,18 +46,16 @@ escape_velocity mass r = sqrt (2*gravitational_constant * mass / r)
 
 ship : Ship
 ship =
-    { mass = 1E6 -- kg
-    , acceleration = vec2 0 0
-    , velocity = vec2 0 (0.5 * escape_velocity earth_mass 12E6)
-    , position = vec2 12000000 0
+    { body =
+        { mass = 1E6 -- kg
+        , acc = vec2 0 0
+        , vel = vec2 0 (0.5 * escape_velocity earth_mass 12E6)
+        , pos = vec2 12000000 0
 
-    , alpha = rotor 0 -- angular accel
-    , omega = rotor 0 -- angular vel
-    , orientation = rotor 0 -- angular pos
-    , x = 0
-    , y = 0
-    , vx = 0
-    , vy = 0
+        , alpha = rotor 0 -- angular accel
+        , omega = rotor 0 -- angular vel
+        , orient = rotor 0 -- angular pos
+        }
     }
 
 -- Mass og earth = 1M+
@@ -68,10 +64,17 @@ gravitational_constant = 6.67E-11 --N(m/kg)^2
 
 earth : Accretion
 earth =
-    { position = vec2 0 0
-    , mass = earth_mass
+    { body =
+        { mass = earth_mass
+        , pos = vec2 0 0
+        , acc = vec2 0 0
+        , vel = vec2 0 0
+        , alpha = rotor 0 -- angular accel
+        , omega = rotor 0 -- angular vel
+        , orient = rotor 0 -- angular pos
+        }
     , radius = 6378100 -- meter
-    , class = PlanetClass
+    , classification = PlanetClass
     }
 
 -- UPDATE
@@ -81,44 +84,41 @@ solscale = 1E5 -- meter
 
 step : (Float, Keys) -> Ship -> Ship
 step (dt, keys) ship =
-    ship
+    { ship | body <- ship.body
         |> thrust keys
         |> impulse keys
         |> gravity (timescale*dt)
         |> physics (timescale*dt)
         |> Debug.watch "ship"
-
-thrust : Keys -> Ship -> Ship
-thrust keys ship =
-    if keys.y > 0 then
-        { ship | acceleration <- V.scale 0.1 (dir ship.orientation) }
-    else { ship | acceleration <- vec2 0.0 0.0 }
-
-gravity : Float -> Ship -> Ship
-gravity dt ship =
-    let dist = ship.position
-        dir = V.normalize dist
-        r2 = V.lengthSquared ship.position
-        f = 0 - earth_mass*ship.mass*gravitational_constant/r2
-    in
-        { ship | acceleration <- V.scale (f/ship.mass) dir }
-
-physics : Float -> Ship -> Ship
-physics dt ship =
-    { ship |
-        velocity <- V.add ship.velocity (V.scale dt ship.acceleration),
-        position <- V.add ship.position (V.scale dt ship.velocity),
-        omega <- ship.omega + dt * ship.alpha,
-        orientation <- ship.orientation + dt * ship.omega,
-        x <- V.getX ship.position,
-        y <- V.getY ship.position,
-        vx <- V.getX ship.velocity,
-        vy <- V.getY ship.velocity
     }
 
-impulse : Keys -> Ship -> Ship
-impulse keys ship =
-    { ship |
+thrust : Keys -> Physical -> Physical
+thrust keys body =
+    if keys.y > 0 then
+        { body | acc <- V.scale 0.1 (dir body.orient) }
+    else { body | acc <- vec2 0.0 0.0 }
+
+gravity : Float -> Physical -> Physical
+gravity dt body =
+    let dist = body.pos
+        dir = V.normalize dist
+        r2 = V.lengthSquared body.pos
+        f = 0 - earth_mass * body.mass * gravitational_constant / r2
+    in
+        { body | acc <- V.scale (f/body.mass) dir }
+
+physics : Float -> Physical -> Physical
+physics dt body =
+    { body |
+        vel <- V.add body.vel (V.scale dt body.acc),
+        pos <- V.add body.pos (V.scale dt body.vel),
+        omega <- body.omega + dt * body.alpha,
+        orient <- body.orient + dt * body.omega
+    }
+
+impulse : Keys -> Physical -> Physical
+impulse keys body =
+    { body |
         alpha <- (-0.001) * toFloat keys.x
     }
 
@@ -138,12 +138,12 @@ display (w',h') ship =
               |> filled background
           , earthImage
               |> toForm
-              |> move (V.getX earth.position, V.getY earth.position)
+              |> movePos earth.body.pos
           , shipImage
               |> toForm
               |> Debug.trace "ship"
-              |> rotate ship.orientation
-              |> movePos ship.position
+              |> rotate ship.body.orient
+              |> movePos ship.body.pos
           ]
 
 background = white
