@@ -6,8 +6,6 @@ import Math.Vector2 (Vec2, vec2, add, scale)
 
 -- MODEL
 
---tau = 2*pi
-
 type Rotor = Float
 rotor : Float -> Rotor
 rotor r = r
@@ -42,7 +40,7 @@ data Direction = Left | Right
 type Keys = { x:Int, y:Int }
 
 escape_velocity : Float -> Float -> Float
-escape_velocity mass r = sqrt (2*gravitational_constant * mass / r)
+escape_velocity mass r = sqrt (2 * gravitational_constant * mass / r)
 
 ship : Ship
 ship =
@@ -96,7 +94,8 @@ thrust : Keys -> Physical -> Physical
 thrust keys body =
     if keys.y > 0 then
         { body | acc <- V.scale 0.1 (dir body.orient) }
-    else { body | acc <- vec2 0.0 0.0 }
+    else
+        { body | acc <- vec2 0.0 0.0 }
 
 gravity : Float -> Physical -> Physical
 gravity dt body =
