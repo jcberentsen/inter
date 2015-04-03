@@ -171,6 +171,11 @@ instance YesodFay App where
                 (game', event) <- liftIO $ gameEmbark game
                 liftIO $ writeIORef (appGame master) game'
                 render r $ event
+            Just (Scan r) -> do
+                game <- liftIO $ readIORef (appGame master)
+                (game', event) <- liftIO $ gameScan game
+                liftIO $ writeIORef (appGame master) game'
+                render r $ event
             _ -> invalidArgs ["Invalid command"]
 
     fayRoute = FaySiteR

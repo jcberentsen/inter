@@ -45,12 +45,14 @@ handleKeyEvent node svg keyevent = do
     case chr key of
         'b' -> beginJourney node svg
         'z' -> deleteLastWaypoint node svg
-        c -> setText ("You pressed the key '" `T.append` (fromShow c) `T.append` "'with code " `T.append` (fromShow key) `T.append` " Press 'b' to start journey!") node >> return ()
+        's' -> scanProximity node svg
+        c -> setText ("You pressed the key " `T.append` (fromShow c) `T.append` " with code " `T.append` (fromShow key) `T.append` " Press 'b' to start journey!") node >> return ()
     return ()
 
 showMission :: JQuery -> Fay ()
 showMission node = do
     setText "You are in orbit around the planet 'Oe243'. Please navigate to the inner planet of the solar system! " node >> return ()
+    --"Get there as soon as possible, without running out of energy"
 
 beginJourney node svg = do
     setText "Let the journey commence!" node >> return ()
@@ -58,6 +60,15 @@ beginJourney node svg = do
         --logF $! "world pos = " `T.append` (fromShow dest_world_pos)
         addWaypoints svg (shipPos ship) (shipWaypoints ship)
         --ship <- moveShip svg dest_world_pos
+        return ()
+
+scanProximity node svg = do
+    setText "Scanning sector..." node >> return ()
+    call Scan $ \(ScanResult scan) -> do
+        logF $! "scan result = " `T.append` (fromShow scan)
+        --addWaypoints svg (shipPos ship) (shipWaypoints ship)
+        --ship <- moveShip svg dest_world_pos
+        renderScan svg scan
         return ()
 
 do3dStuff :: FayRef (Double, Double) -> JQuery -> Fay ()
@@ -127,12 +138,23 @@ moveShip svg world_pos = do
 getShip :: JQuery -> Fay JQuery
 getShip svg = childrenMatching "#ship" svg >>= first
 
+renderScan :: JQuery -> [Body] -> Fay ()
+renderScan svg bodies = do
+    positions <- mapM ((worldToScreenPos svg) . bodyPos) bodies
+    drawBodies svg positions
+
+drawBodies :: JQuery -> [Pos] -> Fay ()
+drawBodies svg positions = do
+    mapM (drawBody svg) positions
+    return ()
+
+drawBody :: JQuery -> Pos -> Fay ()
+drawBody svg pos = createSVGCircle "body" "50" >>= moveTo pos >>= appendTo svg >> return ()
+
 addWaypoints :: JQuery -> WorldPos -> [WorldPos] -> Fay JQuery
 addWaypoints svg pos waypoints = do
     ship_pos <- worldToScreenPos svg pos
     waypositions <- mapM (worldToScreenPos svg) waypoints
-    --let waypos = Prelude.head waypositions
-    -- waypoint <- createSVGRectangle "waypoint" "5" "5" >>= moveTo waypos >>= appendTo svg
     drawPath svg ship_pos waypositions
 
 drawPath :: JQuery -> Pos -> [Pos] -> Fay JQuery

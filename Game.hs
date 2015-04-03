@@ -41,3 +41,10 @@ gameEmbark game = do
     let waypoints = Prelude.init allWaypoints
     let ship' = ship { shipWaypoints=waypoints }
     return (game { gameShip = ship'}, ShipUpdate ship')
+
+gameScan :: Game -> IO (Game, ClientEvent)
+gameScan game = do
+    let ship = gameShip game
+    let ship' = ship
+    let scanResult = [ Body (WorldPos 100 100) 1E24, Body (WorldPos 0 0) 1E30 ]
+    return (game { gameShip = ship'}, ScanResult scanResult)

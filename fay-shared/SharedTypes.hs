@@ -4,7 +4,7 @@ module SharedTypes where
 
 import Language.Fay.Yesod
 import Data.Data
-import Prelude (Read, Show, Int, Double)
+import Prelude (Read, Show, Double)
 #ifdef FAY
 import Fay.Text as T
 #else
@@ -16,12 +16,21 @@ data Command =
   | UserClicked WorldPos (Returns ClientEvent)
   | DeleteLastWaypoint (Returns ClientEvent)
   | Embark (Returns ClientEvent)
+  | Scan (Returns ClientEvent)
     deriving (Read, Typeable, Data)
 
 data WorldPos = WorldPos { world_x ::Double, world_y :: Double } deriving (Data, Typeable, Show, Read)
+
+data Body
+    = Body { bodyPos :: WorldPos
+           , mag :: Double
+           } deriving (Data, Typeable, Show, Read)
 
 data Ship = Ship { shipPos :: WorldPos
                  , shipWaypoints :: [WorldPos]
                  } deriving (Data, Typeable, Show, Read)
 
-data ClientEvent = ShipUpdate Ship deriving (Data, Typeable, Show)
+data ClientEvent
+    = ShipUpdate Ship
+    | ScanResult [Body]
+    deriving (Data, Typeable, Show)
