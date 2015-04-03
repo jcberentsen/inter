@@ -4,3 +4,4 @@
 <button #spawn>Spawn Intragalactic Civilizations
 <div #log>
 <div #mission>
+<div #status>

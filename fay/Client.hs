@@ -12,6 +12,7 @@ import Three
 import Webgl
 import Animation
 import Svg
+import Data.Char
 
 main :: Fay ()
 main = ready $ do
@@ -20,16 +21,32 @@ main = ready $ do
     mouseRef <- newFayRef (0::Double, 0::Double)
     createSVGGroup >>= setAttr "id" "#svggroup" >>= appendTo svg
     select "#spawn" >>= click (spawnIntraGalacticCivilizations svg)
-    click (onClickNewDestination svg) svg
 
     select "#glcanvas" >>= do3dStuff mouseRef
 
-    log <- select "#log"
     missionNode <- select "#mission"
     showMission missionNode
     event_source <- newEventSource "/event"
+
+    log <- select "#log"
+
     addEventListener "log" (handleLogEvent log) event_source
     drawShip svg (WorldPos 0 0)
+
+    click (onClickNewDestination svg) svg
+
+    status <- select "#status"
+    keypress (handleKeyEvent status svg) body
+
+handleKeyEvent :: JQuery -> JQuery -> Event -> Fay ()
+handleKeyEvent node svg keyevent = do
+    text <- eventType keyevent
+    key <- which keyevent
+    case chr key of
+        'b' -> setText "Let the journey begin!" node >> return ()
+        'z' -> deleteLastWaypoint node svg
+        c -> setText ("You pressed the key '" `T.append` (fromShow c) `T.append` "'with code " `T.append` (fromShow key) `T.append` " Press 'b' to start journey!") node >> return ()
+    return () 
 
 showMission :: JQuery -> Fay ()
 showMission node = do
@@ -77,6 +94,15 @@ onClickNewDestination svg e = do
         addWaypoints svg (shipPos ship) (shipWaypoints ship)
         --ship <- moveShip svg dest_world_pos
         return ()
+
+deleteLastWaypoint :: JQuery -> JQuery -> Fay ()
+deleteLastWaypoint node svg = do
+    setText "Deleting last waypoint" node
+    call DeleteLastWaypoint $ \(ShipUpdate ship) -> do
+        addWaypoints svg (shipPos ship) (shipWaypoints ship)
+        return ()
+
+    return ()
 
 drawShip :: JQuery -> WorldPos -> Fay ()
 drawShip svg world_pos = do

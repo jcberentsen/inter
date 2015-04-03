@@ -25,3 +25,11 @@ gameUserClicked pos game = do
     let waypoints = pos : (shipWaypoints ship)
     let ship' = ship { shipWaypoints=waypoints }
     return (game { gameShip = ship'}, ShipUpdate ship')
+
+gameUserDeleteLastWaypoint :: Game -> IO (Game, ClientEvent)
+gameUserDeleteLastWaypoint game = do
+    let ship = gameShip game
+    let allWaypoints = shipWaypoints ship
+    let waypoints = Prelude.drop 1 allWaypoints
+    let ship' = ship { shipWaypoints=waypoints }
+    return (game { gameShip = ship'}, ShipUpdate ship')
