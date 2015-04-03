@@ -25,9 +25,15 @@ main = ready $ do
     select "#glcanvas" >>= do3dStuff mouseRef
 
     log <- select "#log"
+    missionNode <- select "#mission"
+    showMission missionNode
     event_source <- newEventSource "/event"
     addEventListener "log" (handleLogEvent log) event_source
     drawShip svg (WorldPos 0 0)
+
+showMission :: JQuery -> Fay ()
+showMission node = do
+    setText "You are in orbit around the planet 'Oe243'. Please navigate to the inner planet of the solar system! " node >> return ()
 
 do3dStuff :: FayRef (Double, Double) -> JQuery -> Fay ()
 do3dStuff mouseRef glcanvas = do
