@@ -15,6 +15,7 @@ data Command =
     StartGame T.Text (Returns T.Text)
   | UserClicked WorldPos (Returns ClientEvent)
   | DeleteLastWaypoint (Returns ClientEvent)
+  | Embark (Returns ClientEvent)
     deriving (Read, Typeable, Data)
 
 data WorldPos = WorldPos { world_x ::Double, world_y :: Double } deriving (Data, Typeable, Show, Read)

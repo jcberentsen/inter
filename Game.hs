@@ -33,3 +33,11 @@ gameUserDeleteLastWaypoint game = do
     let waypoints = Prelude.drop 1 allWaypoints
     let ship' = ship { shipWaypoints=waypoints }
     return (game { gameShip = ship'}, ShipUpdate ship')
+
+gameEmbark :: Game -> IO (Game, ClientEvent)
+gameEmbark game = do
+    let ship = gameShip game
+    let allWaypoints = shipWaypoints ship
+    let waypoints = Prelude.init allWaypoints
+    let ship' = ship { shipWaypoints=waypoints }
+    return (game { gameShip = ship'}, ShipUpdate ship')

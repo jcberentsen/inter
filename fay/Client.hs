@@ -43,14 +43,22 @@ handleKeyEvent node svg keyevent = do
     text <- eventType keyevent
     key <- which keyevent
     case chr key of
-        'b' -> setText "Let the journey begin!" node >> return ()
+        'b' -> beginJourney node svg
         'z' -> deleteLastWaypoint node svg
         c -> setText ("You pressed the key '" `T.append` (fromShow c) `T.append` "'with code " `T.append` (fromShow key) `T.append` " Press 'b' to start journey!") node >> return ()
-    return () 
+    return ()
 
 showMission :: JQuery -> Fay ()
 showMission node = do
     setText "You are in orbit around the planet 'Oe243'. Please navigate to the inner planet of the solar system! " node >> return ()
+
+beginJourney node svg = do
+    setText "Let the journey commence!" node >> return ()
+    call Embark $ \(ShipUpdate ship) -> do
+        --logF $! "world pos = " `T.append` (fromShow dest_world_pos)
+        addWaypoints svg (shipPos ship) (shipWaypoints ship)
+        --ship <- moveShip svg dest_world_pos
+        return ()
 
 do3dStuff :: FayRef (Double, Double) -> JQuery -> Fay ()
 do3dStuff mouseRef glcanvas = do
@@ -123,8 +131,8 @@ addWaypoints :: JQuery -> WorldPos -> [WorldPos] -> Fay JQuery
 addWaypoints svg pos waypoints = do
     ship_pos <- worldToScreenPos svg pos
     waypositions <- mapM (worldToScreenPos svg) waypoints
-    let waypos = Prelude.head waypositions
-    waypoint <- createSVGRectangle "waypoint" "5" "5" >>= moveTo waypos >>= appendTo svg
+    --let waypos = Prelude.head waypositions
+    -- waypoint <- createSVGRectangle "waypoint" "5" "5" >>= moveTo waypos >>= appendTo svg
     drawPath svg ship_pos waypositions
 
 drawPath :: JQuery -> Pos -> [Pos] -> Fay JQuery
